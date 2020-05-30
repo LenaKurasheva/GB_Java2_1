@@ -16,7 +16,9 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("chat.fxml")); //корневой узел, или корень (root)
         primaryStage.setTitle("Chat");
-        primaryStage.setScene(new Scene(root, 300, 275)); //установка сцены в окне и создане сцены
+        Scene scene = new Scene(root, 300, 275); //установка сцены в окне и создане сцены
+        primaryStage.setScene(scene);
+        scene.getStylesheets().add(Main.class.getResource("style.css").toExternalForm());
         primaryStage.show();
     }
 
