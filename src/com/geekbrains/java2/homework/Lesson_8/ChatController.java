@@ -27,7 +27,7 @@ public class ChatController implements Stageable {
     private DataInputStream in;
     private DataOutputStream out;
     public static ObservableList<String> nickListItems;
-    Date time = new Date();
+    Date time;
 
 
     @FXML
@@ -64,7 +64,7 @@ public class ChatController implements Stageable {
                                     if (!parts[i].equals(ChatSceneApp.getScenes().get(SceneFlow.CHAT).getNick())) nickListItems.add(parts[i]);
                                 }});
                             }
-                            else Platform.runLater(()->{ messageArea.appendText(new SimpleDateFormat("hh:mm:ss a ").format(time) + strFromServer + System.lineSeparator());});
+                            else Platform.runLater(()->{ messageArea.appendText(new SimpleDateFormat("hh:mm:ss a ").format(new Date()) + strFromServer + System.lineSeparator());});
 
                         }
                     }
