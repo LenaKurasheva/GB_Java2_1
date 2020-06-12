@@ -1,7 +1,10 @@
 package com.geekbrains.java2.homework.Lesson_8.multiscene;
 
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -27,9 +30,11 @@ public class ChatSceneApp extends Application {
         return scenes;
     }
 
+    private Socket socket;
+
     @Override
     public void start(Stage primaryStage) {
-        Socket socket = null;
+        socket = null;
         try {
             socket = new Socket("localhost", 8189);
         } catch (IOException e) {
@@ -40,6 +45,5 @@ public class ChatSceneApp extends Application {
         primaryStage.setScene(scenes.get(SceneFlow.LOGIN).getScene());
         primaryStage.setTitle("Login");
         primaryStage.show();
-
     }
 }

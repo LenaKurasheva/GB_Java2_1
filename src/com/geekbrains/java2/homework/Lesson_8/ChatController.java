@@ -18,6 +18,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class ChatController implements Stageable {
     private Stage stage;
@@ -25,6 +27,8 @@ public class ChatController implements Stageable {
     private DataInputStream in;
     private DataOutputStream out;
     public static ObservableList<String> nickListItems;
+    Date time = new Date();
+
 
     @FXML
     TextArea messageArea;
@@ -60,7 +64,7 @@ public class ChatController implements Stageable {
                                     if (!parts[i].equals(ChatSceneApp.getScenes().get(SceneFlow.CHAT).getNick())) nickListItems.add(parts[i]);
                                 }});
                             }
-                            else Platform.runLater(()->{ messageArea.appendText(strFromServer + System.lineSeparator());});
+                            else Platform.runLater(()->{ messageArea.appendText(new SimpleDateFormat("hh:mm:ss a ").format(time) + strFromServer + System.lineSeparator());});
 
                         }
                     }

@@ -5,6 +5,7 @@ import com.geekbrains.java2.homework.Lesson_8.multiscene.SceneFlow;
 import com.geekbrains.java2.homework.Lesson_8.multiscene.Stageable;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -12,6 +13,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -24,7 +26,7 @@ public class AuthDialog implements Stageable, Initializable {
     private Stage stage;
     public Socket socket = ChatSceneApp.getScenes().get(SceneFlow.CHAT).getSocket();
 
-    private static final int CLOSETIME = 10000;
+    private static final int CLOSETIME = 120000;
     public static long startTime;
     static boolean authOk;
 
@@ -62,7 +64,7 @@ public class AuthDialog implements Stageable, Initializable {
                 }
             }
         }).start();
-
+//        stage.setOnCloseRequest();
     }
 
 
@@ -70,32 +72,46 @@ public class AuthDialog implements Stageable, Initializable {
         try {
             DataInputStream in = new DataInputStream(socket.getInputStream());
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            String authMessage = "/auth " + userName.getText() + " " + userPassword.getText();
-            out.writeUTF(authMessage);
-            while (true) {
-                if (in.available() > 0) {
-                    String strFromServer = in.readUTF();
-                    if (strFromServer.startsWith("/authOk")) {
-                        System.out.println("Authorized on server");
-                        authOk = true;
-                        ChatSceneApp.getScenes().get(SceneFlow.CHAT).setNick(strFromServer.split("\\s")[1]);
-                        break;
-                    }
-                    if(strFromServer.startsWith("Incorrect")){
-                        System.out.println("Wrong login/password");
+
+                if (userName.getLength()!=0 && userPassword.getLength()!=0) {
+                    String authMessage = "/auth " + userName.getText() + " " + userPassword.getText();
+//                    System.out.println(Thread.currentThread().getName().toString());
+                    userPassword.clear();
+                    userName.clear();
+                    out.writeUTF(authMessage);
+
+                    while(true) {
+                        if (in.available() > 0) {
+                            String strFromServer = in.readUTF();
+                            if (strFromServer.startsWith("/authOk")) {
+                                System.out.println("Authorized on server");
+                                authOk = true;
+                                ChatSceneApp.getScenes().get(SceneFlow.CHAT).setNick(strFromServer.split("\\s")[1]);
+                                break;
+                            }
+                            if(strFromServer.startsWith("Incorrect")){
+                                System.out.println("Wrong login/password");
+                                break;
+                            }
+                        }
                     }
                 }
-            }
-            stage.setScene(ChatSceneApp.getScenes().get(SceneFlow.CHAT).getScene());
-
+                if (authOk) {
+                    stage.setScene(ChatSceneApp.getScenes().get(SceneFlow.CHAT).getScene());
+                    stage.setTitle("Chat");
+                }
         } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
 
-
     public void exit(ActionEvent actionEvent) {
         ((Stage)rootPane.getScene().getWindow()).close();
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
