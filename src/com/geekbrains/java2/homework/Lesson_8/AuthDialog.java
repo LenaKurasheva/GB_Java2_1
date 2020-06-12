@@ -26,7 +26,7 @@ public class AuthDialog implements Stageable, Initializable {
     private Stage stage;
     public Socket socket = ChatSceneApp.getScenes().get(SceneFlow.CHAT).getSocket();
 
-    private static final int CLOSETIME = 120000;
+    private static final int CLOSETIME = 20000;
     public static long startTime;
     static boolean authOk;
 
@@ -48,7 +48,7 @@ public class AuthDialog implements Stageable, Initializable {
         startTime = System.currentTimeMillis();
         System.out.println("Timer starts.");
         new Thread(()->{
-            while (!authOk) {
+            while (!authOk & !socket.isClosed()) {
                 if (System.currentTimeMillis() - startTime > CLOSETIME) {
                     Platform.runLater(() -> {
                         try {

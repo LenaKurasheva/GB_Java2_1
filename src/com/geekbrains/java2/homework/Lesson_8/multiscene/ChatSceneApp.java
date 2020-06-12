@@ -44,6 +44,15 @@ public class ChatSceneApp extends Application {
         scenes.put(SceneFlow.CHAT, new FxmlInfo(CHAT_FXML, SceneFlow.CHAT, primaryStage, socket));
         primaryStage.setScene(scenes.get(SceneFlow.LOGIN).getScene());
         primaryStage.setTitle("Login");
+        //закрываем сокет и завершаем программу в окне LOGIN по нажатию [x], не дожидаясь истечения 120 сек:
+        primaryStage.setOnCloseRequest(event->{
+            try {
+                socket.close();
+                System.out.println("Socket closed: " + socket.isClosed());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
         primaryStage.show();
     }
 }

@@ -48,6 +48,8 @@ public class ClientHandler {
         }
         myServer.unsubscribe(this);
         myServer.broadcast("User " + name + "left");
+        System.out.println(name + " left");
+        System.out.println("Socket with [" + name + "] is closed: " + socket.isClosed());
     }
 
     private void readMessages() throws IOException {
@@ -56,6 +58,7 @@ public class ClientHandler {
                 String message = in.readUTF();
                 System.out.println("From " + name + ":" + message);
                 if (message.equals("/end")) {
+                    out.writeUTF("/end");
                     return;
                 }
                 if (message.startsWith("/w ")) {

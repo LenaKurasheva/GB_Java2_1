@@ -28,6 +28,7 @@ public class ChatController implements Stageable {
     private DataOutputStream out;
     public static ObservableList<String> nickListItems;
     Date time;
+    private Thread readerThread;
 
 
     @FXML
@@ -37,22 +38,20 @@ public class ChatController implements Stageable {
     TextField newMessage;
 
     @FXML
-    Button sendButton;
-
-    @FXML
     ListView nickList;
 
     public void initialize() throws IOException {
         //принимаем сообщения от сервера:
-        Thread t = new Thread(new Runnable() {
+        readerThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    while (true) {
+                    while (!readerThread.interrupted()) {
                         if (in.available()>0) {
                             String strFromServer = in.readUTF();
                             System.out.println("From server: " + strFromServer);
                             if (strFromServer.equalsIgnoreCase("/end")) {
+                                terminateClient();
                                 break;
                             }
                             if (strFromServer.startsWith("/clients ")) {
@@ -73,7 +72,7 @@ public class ChatController implements Stageable {
                 }
             }
         });
-        t.start();
+        readerThread.start();
         nickListItems = FXCollections.observableArrayList();
         nickListItems.add("All");
         socket = ChatSceneApp.getScenes().get(SceneFlow.CHAT).getSocket();
@@ -97,6 +96,18 @@ public class ChatController implements Stageable {
         }
 
     }
+
+    private void terminateClient() {
+        readerThread.interrupt();
+        try {
+            socket.close();
+            System.out.println("Socket closed: " + socket.isClosed());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Platform.exit();
+    }
+
     // отправляем сообщения на сервер:
     public void sendMessageTypeAction(ActionEvent actionEvent) {
         int selectedIndex = (Integer) nickList.getSelectionModel().getSelectedIndices().get(0);
@@ -106,7 +117,6 @@ public class ChatController implements Stageable {
             if(selectedIndex!=0) {
                 messageText = "/w " + nickList.getSelectionModel().getSelectedItems().get(0) + " " +messageText;
                 System.out.println("message sent: " + messageText);
-                selectedIndex = 0;   //?
             }
             try {
                 out.writeUTF(messageText);
@@ -120,5 +130,13 @@ public class ChatController implements Stageable {
     @Override
     public void setStage(Stage stage) {
         this.stage = stage;
+        stage.setOnCloseRequest(event->{
+            try {
+                //отправляем на сервер "/end", чтобы получить симметричный ответ, после чего срабатывает terminateClient():
+                out.writeUTF("/end");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
