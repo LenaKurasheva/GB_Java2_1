@@ -47,7 +47,7 @@ public class ClientHandler {
             ex.printStackTrace();
         }
         myServer.unsubscribe(this);
-        myServer.broadcast("User " + name + "left");
+        myServer.broadcast("User " + name + " left");
         System.out.println(name + " left");
         System.out.println("Socket with [" + name + "] is closed: " + socket.isClosed());
     }
@@ -58,6 +58,7 @@ public class ClientHandler {
                 String message = in.readUTF();
                 System.out.println("From " + name + ":" + message);
                 if (message.equals("/end")) {
+
                     out.writeUTF("/end");
                     return;
                 }
@@ -111,7 +112,6 @@ public class ClientHandler {
                     }
                 }
             }
-
         }
     }
 

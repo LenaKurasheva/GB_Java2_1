@@ -8,10 +8,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 
 import java.io.DataInputStream;
@@ -29,10 +29,11 @@ public class ChatController implements Stageable {
     public static ObservableList<String> nickListItems;
     Date time;
     private Thread readerThread;
+    private String chatText = "<body>";
 
 
     @FXML
-    TextArea messageArea;
+    WebView messageArea;
 
     @FXML
     TextField newMessage;
@@ -51,20 +52,44 @@ public class ChatController implements Stageable {
                             String strFromServer = in.readUTF();
                             System.out.println("From server: " + strFromServer);
                             if (strFromServer.equalsIgnoreCase("/end")) {
+
                                 terminateClient();
                                 break;
                             }
                             if (strFromServer.startsWith("/clients ")) {
-                                nickListItems.clear();
-                                nickListItems.add("All");
-                                String[] parts = strFromServer.split("\\s");
+                                Platform.runLater(() -> {
+                                    nickListItems.clear();
+                                    nickListItems.add("All");
+                                    String[] parts = strFromServer.split("\\s");
+                                    for (int i = 1; i < parts.length; i++) {
+                                        if (!parts[i].equals(ChatSceneApp.getScenes().get(SceneFlow.CHAT).getNick()))
+                                            nickListItems.add(parts[i]);
+                                    }
+                                });
+                            } else {
 
-                                Platform.runLater(()->{  for(int i=1; i<parts.length; i++) {
-                                    if (!parts[i].equals(ChatSceneApp.getScenes().get(SceneFlow.CHAT).getNick())) nickListItems.add(parts[i]);
-                                }});
+                                if (strFromServer.startsWith("from")) {
+                                    chatText += "<p style='background-color:powderblue; white-space: normal; ' >" + ChatController.getSendingTime() +
+                                            strFromServer + "</p>";
+                                }
+                                else if (strFromServer.startsWith("to")) {
+                                    chatText += "<p align='right' style='background-color:powderblue; white-space: normal;'>" + ChatController.getSendingTime() +
+                                            strFromServer + "</p>";
+                                }
+                                else if (strFromServer.startsWith(ChatSceneApp.getScenes().get(SceneFlow.CHAT).getNick())) {
+                                    chatText += "<p align='right' style='white-space: normal;'>" + ChatController.getSendingTime() + strFromServer + "</p>";
+                                }
+                                else {
+                                    chatText += "<p style='white-space: normal;'>" + ChatController.getSendingTime() + strFromServer + "</p>";
+                                }
+                                Platform.runLater(() -> {
+                                    messageArea.getEngine().loadContent(chatText);
+                                });
+
+                              //Предыдущий вариант с полем чата TextArea (до добавления стилей):
+//                            else Platform.runLater(()->{ messageArea.appendText(new SimpleDateFormat("hh:mm:ss a ").format(new Date()) + strFromServer + System.lineSeparator());});
+
                             }
-                            else Platform.runLater(()->{ messageArea.appendText(new SimpleDateFormat("hh:mm:ss a ").format(new Date()) + strFromServer + System.lineSeparator());});
-
                         }
                     }
                 } catch (Exception e) {
@@ -93,9 +118,15 @@ public class ChatController implements Stageable {
                     break;
                 }
             }
+
         }
 
     }
+
+    private static String getSendingTime(){
+        return new SimpleDateFormat("[hh:mm a] ").format(new Date());
+    }
+
 
     private void terminateClient() {
         readerThread.interrupt();
@@ -119,6 +150,8 @@ public class ChatController implements Stageable {
                 System.out.println("message sent: " + messageText);
             }
             try {
+//                chatText += "<p align='right'>" + messageText + "</p>";
+//                messageArea.getEngine().loadContent(chatText);
                 out.writeUTF(messageText);
             } catch (IOException e) {
                 e.printStackTrace();
